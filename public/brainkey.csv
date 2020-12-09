@@ -1,0 +1,69 @@
+Order,Structure_name,abbrv
+1,Dorsal motor nucleus of the vagus nerve,DMX
+2,Cuneate nucleus,CU
+3,Gracile nucleus,GR
+4,Nucleus of the solitary tract,NST
+5,Medulla,MY
+6,Gigantocellular reticular nucleus,GRN
+7,"Medullary reticular nucleus, ventral part",MDRNd
+8,Magnocellular reticular nucleus,MARN
+9,Intermediate reticular nucleus,IRN
+10,"Paragigantocellular reticular nucleus, lateral part",PGRNl
+11,Facial motor nucleus,VII
+12,"Lateral reticular nucleus, magnocellular part",LRNm
+13,"Medullary reticular nucleus, dorsal part",MDRNv
+14,Parvicellular reticular nucleus,PARN
+15,Nucleus raphe magnus,RM
+16,Nucleus raphe obscurus,RO
+17,"Paragigantocellular reticular nucleus, dorsal part",PGRNd
+18,Hypoglossal nucleus,XII
+19,Nucleus of Roller,NR
+20,Nucleus prepositus,PRP
+21,Spinal vestibular nucleus,SPIV
+22,Medial vestibular nucleus,MV
+23,Lateral vestibular nucleus,LAV
+24,"Spinal nucleus of the trigeminal, interpolar part",SPVI
+25,"Spinal nucleus of the trigeminal, caudal part",SPVC
+26,Pontine reticular nucleus,PRNr
+27,"Pontine reticular nucleus, caudal part",PRNc
+28,Peritrigeminal zone,P5
+29,Pontine central gray,PGC
+30,Sublaterodorsal nucleus,SLD
+31,Laterodorsal tegmental nucleus,LDT
+32,Subceruleus nucleus,SLC
+33,Barrington's nucleus,B
+34,Pons,P
+35,Locus ceruleus,LC
+36,Parabrachial nucleus,PB
+37,Pedunculopontine nucleus,PPN
+38,Supratrigeminal nucleus,SUT
+39,"Superior olivary complex, lateral part",SOCl
+40,"Superior olivary complex, medial part",SOCm
+41,"Superior olivary complex, periolivary region",POR
+42,Fastigial nucleus,FN
+43,Interposed nucleus,IP
+44,Red nucleus,RN
+45,Edinger-Westphal nucleus,EW
+46,Interstitial nucleus of Cajal,INC
+47,Nucleus of Darkschewitsch,ND
+48,Midbrain,MB
+49,Midbrain reticular nucleus,MRN
+50,"Midbrain reticular nucleus, retrorubral area",RR
+51,Periaqueductal gray,PAG
+52,Paraventricular hypothalamic nucleus,PVH
+53,"Paraventricular hypothalamic nucleus, descending division",PVHd
+54,Dorsomedial nucleus of the hypothalamus,DMH
+55,Hypothalamus,HY
+56,Lateral hypothalamic area,LHA
+57,Zona incerta,ZI
+58,Anterior hypothalamic nucleus,AHN
+59,"Periventricular hypothalamic nucleus, intermediate part",Pvi
+60,Posterior hypothalamic nucleus,PH
+61,Ventromedial hypothalamic nucleus,VMH
+62,Perireunensis nucleus,PR
+63,"Subparafascicular nucleus, magnocellular part",SPFm
+64,Thalamus,TH
+65,Ventral medial nucleus of the thalamus,VM
+66,Nucleus of reuniens,RE
+67,"Central amygdalar nucleus, medial part",CEAm
+68,Substantia innominata,SI
