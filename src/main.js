@@ -10,6 +10,8 @@ import VueApexCharts from 'vue-apexcharts'
 import VueMarkdown from 'vue-markdown'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
+import VueSlider from 'vue-slider-component'
+import 'vue-slider-component/theme/default.css'
 
 Vue.use(VueRouter)
 Vue.config.productionTip = false
@@ -19,6 +21,7 @@ Vue.use(vuetify)
 Vue.use(VueApexCharts)
 Vue.use(VueMarkdown)
 Vue.use(VueAxios, axios)
+Vue.component('VueSlider', VueSlider);
 Vue.component('apexchart', VueApexCharts)
 Vue.component('vue-markdown', VueMarkdown)
 

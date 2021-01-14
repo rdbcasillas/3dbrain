@@ -14,13 +14,13 @@
         Treatments
       </b-breadcrumb-item>
       <b-breadcrumb-item :to="{ name: category, params: { type: category } }">
-        {{ $route.name.slice(0,-5) }}
+        {{ $route.name.slice(0, -5) }}
       </b-breadcrumb-item>
       <b-breadcrumb-item active>{{ id }}</b-breadcrumb-item>
     </b-breadcrumb>
     <b-container fluid>
       <b-row>
-        <b-col >
+        <b-col>
           <div v-show="staticimage">
             <b-img
               thumbnail
@@ -109,21 +109,26 @@
               :items="brainkey"
               :fields="fields"
             >
-              <template #table-caption><b>Region Index Key</b>
-              </template>
+              <template #table-caption><b>Region Index Key</b> </template>
               <template #cell(Region)="data">
-                 <span id="tooltip-target-1">
-                  {{ data.item.Region }} 
-                 </span>
-                <b-tooltip target="tooltip-target-1" triggers="hover" placement="left">
-                <div>
-                  <h5> References: </h5>
-                  <ul>
-                    <li v-for="(name,index) in data.item.Name" :key="index">
-                         <a :href="data.item.Link[index]" target="_blank"> {{ name }}</a>
-                    </li>
-                  </ul>
-                </div>
+                <span id="tooltip-target-1">
+                  {{ data.item.Region }}
+                </span>
+                <b-tooltip
+                  target="tooltip-target-1"
+                  triggers="hover"
+                  placement="left"
+                >
+                  <div>
+                    <h5>References:</h5>
+                    <ul>
+                      <li v-for="(name, index) in data.item.Name" :key="index">
+                        <a :href="data.item.Link[index]" target="_blank">
+                          {{ name }}</a
+                        >
+                      </li>
+                    </ul>
+                  </div>
                 </b-tooltip>
               </template>
             </b-table>
@@ -133,28 +138,85 @@
       <hr />
       <b-row>
         <b-col>
-          <b-button id="mybutton" v-if="!flag" @click="updateChart" variant="primary">
-            Show cell count for each region
+          <b-button
+            id="mybutton"
+            v-if="!flag"
+            @click="showChart"
+            variant="primary"
+            :disabled="id=='180' || id=='182'"
+          >
+            Plot Cell Counts Across Regions
           </b-button>
         </b-col>
       </b-row>
-      <b-row id="myid">
+      <b-row v-if="flag" >
+        <b-col cols="8">
+          <span>Use the slider to filter the graph by cell count</span>
+          <vue-slider
+            v-model="slidervalue"
+            :min="minval"
+            :max="maxval"
+            :marks="calcSliderMarks"
+          ></vue-slider>
+        </b-col>
         <b-col>
+          <b-button @click="showLeftRight">Show Left/Right values</b-button>
+        </b-col>
+      </b-row>
+      <br />
+      <b-row id="myid">
+        <!-- <div v-if="flag" class="slidecontainer">
+        <input v-model="slidervalue" type="range"  min="1" :max="slidervalue"  class="slider" id="myRange">
+      </div> -->
+        <b-col v-if="flag">
+          <br />
           <apexchart
-            v-if="flag"
             height="900"
             type="bar"
             :options="chartOptions2"
-            :series="series2"
+            :series="getCategoryData()"
           ></apexchart>
         </b-col>
         <b-col>
+          <br />
           <apexchart
             v-if="flag"
             height="900"
             type="bar"
             :options="chartOptions"
-            :series="series3"
+            :series="regionTotal"
+          ></apexchart>
+        </b-col>
+      </b-row>
+      <hr>
+      <b-row v-if="category=='cervical'">
+        <b-col>
+          <b-button
+            id="mybutton"
+            v-if="showNormalized"
+            @click="plotNormalized"
+            variant="primary"
+            :disabled="id=='180' || id=='182'"
+          >
+            Show normalized values 
+          </b-button>
+        </b-col>
+      </b-row>
+      <b-row v-if="showNormalized">
+        <b-col>
+          <apexchart
+            height="800"
+            type="bar"
+            :options="normchartOptions"
+            :series="normSeries"
+          ></apexchart>
+        </b-col>
+        <b-col>
+          <apexchart
+            height="800"
+            type="bar"
+            :options="normRegionChartOptions"
+            :series="normRegionSeries"
           ></apexchart>
         </b-col>
       </b-row>
@@ -164,15 +226,22 @@
 
 <script>
 import * as d3 from "d3-fetch";
+//import * as d3sc from "d3-scale";
 import * as _ from "lodash";
-import * as $ from "jquery"
+import * as $ from "jquery";
+
 export default {
   name: "BrainMulViz",
+  components: {},
   props: ["id", "category"],
   data: function () {
     return {
+      minval: 0,
+      maxval: 12000,
+      slidervalue: 9000,
       staticimage: true,
       flag: false,
+      showNormalized: false,
       tmpflag: false,
       images: [],
       images2: [],
@@ -202,23 +271,39 @@ export default {
         {
           key: "abbrv",
           sortable: true,
-          // Variant applies to the whole column, including the header and footer
-          //variant: 'danger'
         },
-        // {
-        //   key: "groupname",
-        //   sortable: false,
-        //   thStyle: {},
-        //   variant: 'info'
-        // },
       ],
       filter: null,
+      normSeries: [],
+      normchartOptions: {},
+      normRegionSeries: [],
+      normRegionChartOptions: {}
     };
   },
+  computed: {
+    calcSliderMarks: function(){
+      if (this.category=='cervical') {
+        let marks = [500, 1000, 3000, 5000, 16000];
+        return marks;
+      }
+      else {
+        let marks = [100, 500, 1000, 3000, 5000, 12000];
+        return marks;
+      }
+    },
+    calcMax: function(){
+      if (this.category=='cervical') {
+        return 16000;
+      }
+      else {
+        return 12000;
+      }
+    }
+  },
   methods: {
-    imageCounter(){
-      let imageNumber = this.currentImage + 1
-      let spanText = imageNumber + "/" + this.filteredset.length
+    imageCounter() {
+      let imageNumber = this.currentImage + 1;
+      let spanText = imageNumber + "/" + this.filteredset.length;
       return spanText;
     },
     nextImage(imageset) {
@@ -257,11 +342,10 @@ export default {
         this.images3.push({ pathLong: r(key), pathShort: key })
       );
       let filteredarr = _.map(this.images3, function (o) {
-        if (id=="17600"){
+        if (id == "17600") {
           let searchStr = id + "/horizontal";
           if (o.pathShort.indexOf(searchStr) > -1) return o;
-        }
-        else {
+        } else {
           let searchStr = id + "/";
           if (o.pathShort.indexOf(searchStr) > -1) return o;
         }
@@ -271,139 +355,165 @@ export default {
     },
     async fetchData() {
       this.brainkey = await d3.csv("../brain_region.csv");
-      this.brainkey = _.forEach(this.brainkey, (obj)=>{
-        obj.Name = obj.Name.split(";")
-        obj.PMID = obj.PMID.split(";")
-        obj.Title = obj.Title.split(";")
-        obj.Link = obj.Link.split(";")
+      this.brainkey = _.forEach(this.brainkey, (obj) => {
+        obj.Name = obj.Name.split(";");
+        obj.PMID = obj.PMID.split(";");
+        obj.Title = obj.Title.split(";");
+        obj.Link = obj.Link.split(";");
       });
 
-      let graphdata = await d3.csv("../datasets/168-test2.csv")
-      _.each(graphdata, item => item["168-Tot"] = parseInt(item["168-Tot"], 10));
-      //New data
-      let sumoutput =
-        _(graphdata)
-          .groupBy('Category-Name')
-          .map((objs, key) => ({
-              'Category-Name': key,
-              'Color': _.map(objs, 'Color')[0],
-              'Total': _.sumBy(objs, '168-Tot') }))
-          //.orderBy(['Total'],['desc'])
-          .filter(obj=>obj['Category-Name'] != 'Unused')
-          .value();
-     
-      console.log(sumoutput)
-      
-      let newgraphdata = _.filter(graphdata,
-                           (o)=>{return o['168-Tot'] > 0})
+      let path = "../datasets/" + this.id + ".csv";
+      //this.graphdata = await d3.csv("../datasets/138.csv")
+      this.graphdata = await d3.csv(path);
+      _.each(
+        this.graphdata,
+        (item) => (item["TotalCount"] = parseInt(item["TotalCount"], 10))
+      );
+      _.each(
+        this.graphdata,
+        (item) => (item["LeftCount"] = parseInt(item["LeftCount"], 10))
+      );
+      _.each(
+        this.graphdata,
+        (item) => (item["RightCount"] = parseInt(item["RightCount"], 10))
+      );
 
-      this.mainregions = _.map(sumoutput, 'Category-Name');
-      this.colors = _.map(sumoutput, 'Color')
-      this.allcolors = _.map(newgraphdata,"Color");
-      console.log(this.mainregions)
-      this.categorytotal = _.map(sumoutput, 'Total');
-      this.categories = _.map(newgraphdata, "Region-name");
-      this.leftcounts = _.map(newgraphdata, "168-L");
-      this.rightcounts = _.map(newgraphdata, "168-R");
-      this.totalcounts = _.map(newgraphdata, "168-Tot")
+      if (this.id=='174' || this.id=='176'){
+        _.each(
+          this.graphdata,
+          (item) => (item["Normalized"] = parseInt(item["Normalized"], 10))
+        );
+      }
+      //New data
+      this.sumoutput = _(this.graphdata)
+        .groupBy("Category-Name")
+        .map((objs, key) => ({
+          "Category-Name": key,
+          Color: _.map(objs, "Color")[0],
+          Total: _.sumBy(objs, "TotalCount"),
+          LeftTotal: _.sumBy(objs, "LeftCount"),
+          RightTotal: _.sumBy(objs, "RightCount")
+        }))
+        .filter((obj) => obj["Category-Name"] != "Unused")
+        //.filter(obj1=>obj1['Total'] <= this.slidervalue)
+        .value();
+
+      if (this.id=='174' || this.id=='176'){
+        this.normalizedoutput = _(this.graphdata)
+        .groupBy("Category-Name")
+        .map((objs, key) => ({
+          "Category-Name": key,
+          Color: _.map(objs, "Color")[0],
+          Total: _.sumBy(objs, "TotalCount"),
+          NormalizedTotal: _.sumBy(objs,"Normalized"),
+          LeftTotal: _.sumBy(objs, "LeftCount"),
+          RightTotal: _.sumBy(objs, "RightCount")
+        }))
+        .filter((obj) => obj["Category-Name"] != "Unused")
+        .value(); 
+      }
+      this.newgraphdata = _.map(this.graphdata, function (element) {
+        return _.extend({}, element, {
+          newlabel: element["Region-name"] + " (" + element["Abbrv"] + ")",
+        });
+      });
+
+      this.mainregions = _.map(this.sumoutput, "Category-Name");
+      this.colors = _.map(this.sumoutput, "Color");
+      this.allcolors = _.map(this.newgraphdata, "Color");
+      this.categorytotal = _.map(this.sumoutput, "Total");
+      this.categoryleft = _.map(this.sumoutput, "LeftTotal")
+      this.categoryright = _.map(this.sumoutput, "RightTotal")
+      //this.maxval = _.max(this.categorytotal);
+      this.slidervalue = _.max(this.categorytotal);
+      this.categories = _.map(this.newgraphdata, "newlabel");
+      this.leftcounts = _.map(this.newgraphdata, "LeftCount");
+      this.rightcounts = _.map(this.newgraphdata, "RightCount");
+      this.totalcounts = _.map(this.newgraphdata, "TotalCount");
+
+
+      if (this.id=='174' || this.id=='176'){
+        this.normalizedCategory = _.map(this.normalizedoutput, "NormalizedTotal");
+        this.normalizedRegionCounts = _.map(this.newgraphdata, "Normalized")
+      }
     },
-    updateChart() {
+    showChart() {
       $("html, body").animate({ scrollTop: $(document).height() }, "slow");
       this.flag = true;
+      if (this.category=='injured' || this.category=='cervical') {
+        this.showNormalized = true;
+      }
       this.chartOptions2 = {
+        chart: {
+          stacked: this.stackedState,
+        },
+        tooltip: {
+          intersect: true,
+          shared: false,
+          onDatasetHover: {
+            highlightDataSeries: true,
+          },
+        },
         plotOptions: {
           bar: {
             horizontal: true,
-            distributed: true
-          }
+            distributed: true,
+          },
         },
-        colors: this.colors, 
+        colors: this.colors,
         grid: {
-            show: true,
-            borderColor: '#90A4AE',
-            strokeDashArray: 0,
-            position: 'back',
-            xaxis: {
-                lines: {
-                    show: false
-                }
-            },   
-            yaxis: {
-                lines: {
-                    show: false
-                }
-            },  
-            row: {
-                colors: undefined,
-                opacity: 0.5
-            },  
-            column: {
-                colors: undefined,
-                opacity: 0.5
-            },  
-            padding: {
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0
-            },  
+          show: true,
+          borderColor: "#90A4AE",
+          strokeDashArray: 0,
+          position: "back",
+          xaxis: {
+            lines: {
+              show: false,
+            },
+          },
+          yaxis: {
+            lines: {
+              show: false,
+            },
+          },
+          row: {
+            colors: undefined,
+            opacity: 0.5,
+          },
+          column: {
+            colors: undefined,
+            opacity: 0.5,
+          },
+          padding: {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+          },
         },
 
         fill: {
           type: "solid",
-          opacity: 1
+          //type: "pattern",
+          opacity: 1,
         },
         title: {
           text: "Cell count by category",
-          align: "centre",
+          align: "center",
+          offsetY: 10,
           style: {
             fontSize: "14px",
             fontWeight: "bold",
             color: "#263238",
           },
         },
-        xaxis: { categories: this.mainregions},
-        yaxis: {tickAmount: 3, max: _.max(this.series2)},
-        legend: {
-          show:false,
-          position: "top",
+        xaxis: { categories: this.mainregions,
+        tickPlacement: 'on' },
+        yaxis: {
+          tickAmount: 5,
+          max: this.maxval,
+          labels: { maxWidth: 270, style: { fontSize: "16px" } },
         },
-        dataLabels: {
-          enabled: false,
-          style: {
-            colors: ["black"],
-          },
-        },
-      }
-      this.chartOptions = {
-        chart: {
-          stacked: false,
-        },
-        colors: this.allcolors, 
-        grid:{
-          show: true
-        },
-        plotOptions: {
-          bar: {
-            horizontal: true,
-            distributed: true
-          }
-        },
-        fill: {
-          type: "solid",
-          opacity: 1
-        },
-        title: {
-          text: "Cell count by brain region",
-          align: "centre",
-          style: {
-            fontSize: "14px",
-            fontWeight: "bold",
-            color: "#263238",
-          },
-        },
-        xaxis: { categories: this.categories },
-        //yaxis: {logarithmic: true},
         legend: {
           show: false,
           position: "top",
@@ -415,19 +525,67 @@ export default {
           },
         },
       };
-      this.series2 = [
+      this.chartOptions = {
+        chart: {
+          stacked: false,
+        },
+        colors: this.allcolors,
+        grid: {
+          show: true,
+        },
+        plotOptions: {
+          bar: {
+            horizontal: true,
+            distributed: true,
+          },
+        },
+        fill: {
+          type: "solid",
+          opacity: 1,
+        },
+        title: {
+          text: "Cell count by brain region",
+          align: "centre",
+          style: {
+            fontSize: "14px",
+            fontWeight: "bold",
+            color: "#263238",
+          },
+        },
+        xaxis: { categories: this.categories },
+        yaxis: {
+          tickAmount: 5,
+          max: 12000,
+          labels: { maxWidth: 350, offsetX: -10 },
+        },
+        legend: {
+          show: false,
+          position: "top",
+        },
+        textAnchor: "top",
+        dataLabels: {
+          distributed: true,
+          enabled: false,
+          style: {
+            colors: ["black"],
+            fontWeight: "normal",
+            fontSize: "10px",
+          },
+        },
+      };
+      this.categoryTotal = [
         {
-          name: 'CategoryTotal',
-          data: this.categorytotal
-        }
-      ]
-      this.series3 = [
+          name: "CategoryTotal",
+          data: this.categorytotal,
+        },
+      ];
+      this.regionTotal = [
         {
-          name: 'RegionTotal',
-          data: this.totalcounts
-        }
-      ]
-      this.series = [
+          name: "RegionTotal",
+          data: this.totalcounts,
+        },
+      ];
+      this.regionsLeftRight = [
         {
           name: "leftcounts",
           data: this.leftcounts,
@@ -437,31 +595,205 @@ export default {
           data: this.rightcounts,
         },
       ];
+      this.categoryLeftRight = [
+        {
+          name: "leftcounts",
+          data: this.categoryleft,
+        },
+        {
+          name: "rightcounts",
+          data: this.categoryright,
+        },
+      ];
     },
-    showChart() {
+    updateChart() {
       this.flag = true;
+
     },
+    stackedState(){
+      if (this.category=="injured"){
+        return false;
+      }
+      else {
+        return false
+      }
+    },
+    showLeftRight(){
+      console.log("showleftright")
+    },
+    getCategoryData(){
+      console.log(this.categoryLeftRight)
+      if (this.category=="injured"){
+        console.log("I was called?")
+        return this.categoryLeftRight;
+      }
+      else {
+        return this.categoryTotal;
+      }
+    },
+    plotNormalized(){
+      //this.showNormalized = false;
+      $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+      this.normchartOptions = {
+          chart: {
+            stacked: false,
+          },
+          plotOptions: {
+            bar: {
+              horizontal: true,
+              distributed: true,
+            },
+          },
+          colors: this.colors,
+          fill: {
+            type: "solid",
+            //type: "pattern",
+            opacity: 1,
+          },
+          title: {
+            text: "Norm Cell count by category",
+            align: "center",
+            offsetY: 10,
+            style: {
+              fontSize: "14px",
+              fontWeight: "bold",
+              color: "#263238",
+            },
+          },
+          xaxis: { categories: this.mainregions},
+          yaxis: {
+            tickAmount: 5,
+            //max: this.maxval,
+            labels: { maxWidth: 270, style: { fontSize: "16px" } },
+          },
+          legend: {
+            show: false,
+            position: "top",
+          },
+          dataLabels: {
+            enabled: false,
+          },
+        };
+        this.normSeries = [
+          {
+            name: "normCategoryTotal",
+            data: this.normalizedCategory,
+          },
+        ]
+        this.normRegionChartOptions = {
+          chart: {
+            stacked: false,
+          },
+          colors: this.allcolors,
+          grid: {
+            show: true,
+          },
+          plotOptions: {
+            bar: {
+              horizontal: true,
+              distributed: true,
+            },
+          },
+          fill: {
+            type: "solid",
+            opacity: 1,
+          },
+          title: {
+            text: "Normalized cell count by brain region",
+            align: "centre",
+            style: {
+              fontSize: "14px",
+              fontWeight: "bold",
+              color: "#263238",
+            },
+          },
+          xaxis: { categories: this.categories },
+          yaxis: {
+            tickAmount: 5,
+            labels: { maxWidth: 350, offsetX: -10 },
+          },
+          textAnchor: "top",
+          dataLabels: {
+            enabled: false,
+          },
+          legend: {
+            show: false,
+          }
+        };
+        this.normRegionSeries = [
+          {
+            name: "normRegionCount",
+            data: this.normalizedRegionCounts,
+          },
+        ]
+    }
   },
   created() {
     this.fetchData();
   },
+  beforeMount() {
+    //this.fetchData();
+  },
+  watch: {
+    slidervalue: function () {
+      //left graph update
+      this.newsumoutput = _.filter(
+        this.sumoutput,
+        (obj1) => obj1["Total"] <= this.slidervalue
+      );
+      console.log(this.newsumoutput);
+      this.newcategorytotal = _.map(this.newsumoutput, "Total");
+      this.mainregions = _.map(this.newsumoutput, "Category-Name");
+      this.colors = _.map(this.newsumoutput, "Color");
+      this.categoryTotal = [
+        {
+          name: "CategoryTotal",
+          data: this.newcategorytotal,
+        },
+      ];
+
+      this.chartOptions2 = {
+        xaxis: {
+          categories: this.mainregions,
+        },
+        yaxis: {
+          max: _.max(this.categorytotal),
+        },
+        colors: this.colors,
+      };
+
+      //right graph update
+      this.updatedgraphdata = _.filter(
+        this.newgraphdata,
+        (obj1) => obj1["TotalCount"] <= this.slidervalue
+      );
+      this.categories = _.map(this.updatedgraphdata, "newlabel");
+      this.totalcounts = _.map(this.updatedgraphdata, "TotalCount");
+      this.allcolors = _.map(this.updatedgraphdata, "Color");
+
+      this.regionTotal = [
+        {
+          name: "RegionTotal",
+          data: this.totalcounts,
+        },
+      ];
+
+      this.chartOptions = {
+        xaxis: {
+          categories: this.categories,
+        },
+        yaxis: {
+          max: _.max(this.totalcounts),
+          labels: { maxWidth: 350 },
+        },
+        colors: this.allcolors,
+      };
+    },
+  },
   mounted() {
-    this.filteredset = []
+    this.filteredset = [];
     this.staticimage = true;
-    this.images3 = []
-    // this.currentImage = 4;
-    // this.currentImage2 = 0;
-    // this.importAllHorizontal(
-    //   require.context(
-    //     "../assets/2d-annotations/176/horizontal/",
-    //     true,
-    //     /\.png$/
-    //   )
-    // );
-    // //let pathToImage = "../assets/2d-annotations/" + this.id + "/horizontal/"
-    //this.importAllHorizontal(require.context(pathToImage, true, /\.png$/));
-    //this.importAllHorizontal(require.context(`../assets/2d-annotations/${this.id}/horizontal/`, true, /\.png$/));
-    //this.importTest(require.context("../assets/2d-annotations/", true));
+    this.images3 = [];
     this.importTest(require.context("../assets/Updated_2D_annotations/", true));
     if (this.id == "176") {
       this.importAllSaggital(
@@ -478,13 +810,13 @@ export default {
 </script>
 
 <style lang="css" scoped>
- /* .prev {
+/* .prev {
   margin-top: 200px;
   margin-right: -180px; 
 } */
 .next {
-  margin-left: -30px; 
-} 
+  margin-left: -30px;
+}
 .d-flex {
   display: inline;
 }
@@ -508,5 +840,8 @@ export default {
 }
 .multiviz {
   text-align: center;
+}
+#myid {
+  border: 1px solid;
 }
 </style>

@@ -19,7 +19,7 @@
             class="mb-2"
           >
             <b-card-text>
-              For this one, we injected a lot of good stuff in all the proper places.  
+              {{ cat.text }}  
             </b-card-text>
 
           <b-button  :to="{name: cat.link, params: {type: cat.link}}" size="md" variant="primary">
@@ -45,23 +45,28 @@ export default {
       categoryObj: [
         {
         'name': 'Lower Lumbar Injection',
-        'link': 'lowlumbar'
+        'link': 'lowlumbar',
+        'text': 'AAV2-Retro-H2B-mGL was injected to segment L3/4 of the spinal cord'
         },
         {
           'name': 'Upper Lumbar Injection',
-          'link': 'lumbar'
+          'link': 'lumbar',
+          'text': 'AAV2-Retro-H2B-mGL was injected to segment L1 of the spinal cord'
         },
         {
           'name': 'Thoracic Injection',
-          'link': 'thoracic'
+          'link': 'thoracic',
+          'text': 'AAV2-Retro-H2B-mGL was injected to segment T10 of the spinal cord'
         },
         {
         'name': 'Lumbar/Cervical Injection',
-        'link': 'cervical'
+        'link': 'cervical',
+        'text': 'AAV-Retro-mScarlet and AAV2-Retro-H2B-mGL were injected to segments C4 and L1 of the spinal cord, respectively'
         },
         {
           'name': 'Injured_Animals',
-          'link': 'injured'
+          'link': 'injured',
+          'text': 'AAV2-Retro-H2B-mGL was injected rostrally or caudally after mild, moderate or severe spinal injury'
         },
       ]
     }

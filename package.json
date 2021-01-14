@@ -16,6 +16,7 @@
     "bootstrap-vue": "^2.17.3",
     "core-js": "^3.6.5",
     "d3-fetch": "^2.0.0",
+    "d3-scale": "^3.2.3",
     "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "vue": "^2.6.11",
@@ -23,6 +24,7 @@
     "vue-axios": "^3.2.0",
     "vue-markdown": "^2.2.4",
     "vue-router": "^3.4.6",
+    "vue-slider-component": "^3.2.11",
     "vuetify": "^2.3.15"
   },
   "devDependencies": {

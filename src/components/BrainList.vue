@@ -22,13 +22,13 @@
           v-for="(brain, index) in brainObj[$route.name]"
           :key="index"
         >
-          <b-card
+          <b-card v-b-popover.hover="hoveredText(brain)"
             @mouseover="activeCard=index"
             @mouseout="activeCard=null"
             :border-variant="activeCard==index ? 'primary' : 'dark' "
             :header="($route.name=='injured') ? textContent(brain) : ''"
             header-text-variant="dark"
-            :title="brain" 
+            :title="'Animal ID: ' + brain" 
             :img-src="'../injectionimages/'+brain+'.png'"
             img-alt="Image"
             img-top
@@ -64,7 +64,7 @@ export default {
         cervical: ["174", "176"],
         lumbar: ["167", "168"],
         lowlumbar: ["136","138"],
-        injured: ["148", "149", "190", "191", "177", "179", "180","182", ],
+        injured: [ "190", "191", "177", "179", "180","182", "148", "149",],
         thoracic: ["140", "145"],
       },
     };
@@ -72,6 +72,14 @@ export default {
   methods: {
     hoverEffect(){
       console.log("hi")
+    },
+    hoveredText(id){
+     if (id=='148' || id == '149') {
+       return "AAV2-Retro-H2B-mGL injected to T10 four weeks after T11/12 injury"
+     } 
+     else {
+       return "AAV2-Retro-H2B-mGL injected to L1 seven weeks after T11/12 injury"
+     }
     },
     // if colors required for the border
     borderColor(id){
@@ -92,16 +100,16 @@ export default {
     ,
     textContent(id){
       if (id=='182' || id=='180') {
-        return 'Severe'
+        return 'Severe Injury'
       }
       else if (id=='148' || id == '149') {
-        return 'Thoracic delayed after Injury'
+        return 'Severe Injury, Rostral Injection'
       }
       else if (id=='190' || id == '191') {
-        return 'Mild'
+        return 'Mild Injury'
       }
       else {
-        return 'Moderate'
+        return 'Moderate Injury'
       }
     }
   },
