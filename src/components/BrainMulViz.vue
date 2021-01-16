@@ -13,8 +13,11 @@
       <b-breadcrumb-item :to="{ name: 'selecttype' }">
         Treatments
       </b-breadcrumb-item>
-      <b-breadcrumb-item :to="{ name: category, params: { type: category } }">
+      <!-- <b-breadcrumb-item :to="{ name: category, params: { type: category } }">
         {{ $route.name.slice(0, -5) }}
+      </b-breadcrumb-item> -->
+      <b-breadcrumb-item :to="{ name: category, params: { type: category } }">
+        {{ calcBreadCrumbVal }}
       </b-breadcrumb-item>
       <b-breadcrumb-item active>{{ id }}</b-breadcrumb-item>
     </b-breadcrumb>
@@ -155,19 +158,16 @@
           <vue-slider
             v-model="slidervalue"
             :min="minval"
-            :max="maxval"
+            :max="calcMax"
             :marks="calcSliderMarks"
           ></vue-slider>
         </b-col>
-        <b-col>
+        <!-- <b-col>
           <b-button @click="showLeftRight">Show Left/Right values</b-button>
-        </b-col>
+        </b-col> -->
       </b-row>
       <br />
       <b-row id="myid">
-        <!-- <div v-if="flag" class="slidecontainer">
-        <input v-model="slidervalue" type="range"  min="1" :max="slidervalue"  class="slider" id="myRange">
-      </div> -->
         <b-col v-if="flag">
           <br />
           <apexchart
@@ -189,11 +189,11 @@
         </b-col>
       </b-row>
       <hr>
-      <b-row v-if="category=='cervical'">
+      <b-row v-if="normBrains.includes(id)">
         <b-col>
           <b-button
             id="mybutton"
-            v-if="showNormalized"
+            v-if="showNormalizedButton"
             @click="plotNormalized"
             variant="primary"
             :disabled="id=='180' || id=='182'"
@@ -242,6 +242,7 @@ export default {
       staticimage: true,
       flag: false,
       showNormalized: false,
+      showNormalizedButton: false,
       tmpflag: false,
       images: [],
       images2: [],
@@ -274,6 +275,7 @@ export default {
         },
       ],
       filter: null,
+      normBrains: ['174','176','177','179','190','191'],
       normSeries: [],
       normchartOptions: {},
       normRegionSeries: [],
@@ -282,6 +284,7 @@ export default {
   },
   computed: {
     calcSliderMarks: function(){
+      //let finalpoint = this.slidervalue
       if (this.category=='cervical') {
         let marks = [500, 1000, 3000, 5000, 16000];
         return marks;
@@ -297,6 +300,23 @@ export default {
       }
       else {
         return 12000;
+      }
+    },
+    calcBreadCrumbVal(){
+      if (this.category=='cervical') {
+        return 'cervical-lumbar'
+      }
+      else if (this.category=='lowlumbar') {
+        return 'lower-lumbar'
+      }
+      else if (this.category=='lumbar') {
+        return 'upper-lumbar'
+      }
+      else if (this.category=='thoracic') {
+        return 'thoracic'
+      }
+      else {
+        return 'injured'
       }
     }
   },
@@ -354,6 +374,7 @@ export default {
       this.filteredset = filteredarr;
     },
     async fetchData() {
+      console.log(this.$route.name)
       this.brainkey = await d3.csv("../brain_region.csv");
       this.brainkey = _.forEach(this.brainkey, (obj) => {
         obj.Name = obj.Name.split(";");
@@ -363,7 +384,14 @@ export default {
       });
 
       let path = "../datasets/" + this.id + ".csv";
+      let pathtocatdata = ''
+      if (this.normBrains.includes(this.id)){
+        pathtocatdata = "/../datasets/" + this.id + "-cat-norm.csv"
+        this.catnormdata = await d3.csv(pathtocatdata)
+      }
       //this.graphdata = await d3.csv("../datasets/138.csv")
+      _.each(this.catnormdata, (item) => (item["TotalCount"] = parseInt(item["TotalCount"], 10)) )
+
       this.graphdata = await d3.csv(path);
       _.each(
         this.graphdata,
@@ -378,7 +406,7 @@ export default {
         (item) => (item["RightCount"] = parseInt(item["RightCount"], 10))
       );
 
-      if (this.id=='174' || this.id=='176'){
+      if (this.normBrains.includes(this.id)){
         _.each(
           this.graphdata,
           (item) => (item["Normalized"] = parseInt(item["Normalized"], 10))
@@ -398,7 +426,7 @@ export default {
         //.filter(obj1=>obj1['Total'] <= this.slidervalue)
         .value();
 
-      if (this.id=='174' || this.id=='176'){
+      if (this.normBrains.includes(this.id)){
         this.normalizedoutput = _(this.graphdata)
         .groupBy("Category-Name")
         .map((objs, key) => ({
@@ -410,6 +438,8 @@ export default {
           RightTotal: _.sumBy(objs, "RightCount")
         }))
         .filter((obj) => obj["Category-Name"] != "Unused")
+        .filter((obj) => obj["NormalizedTotal"] >= 0)
+        //.filter((obj) => obj["Normalized"] >= 0)
         .value(); 
       }
       this.newgraphdata = _.map(this.graphdata, function (element) {
@@ -432,16 +462,17 @@ export default {
       this.totalcounts = _.map(this.newgraphdata, "TotalCount");
 
 
-      if (this.id=='174' || this.id=='176'){
-        this.normalizedCategory = _.map(this.normalizedoutput, "NormalizedTotal");
-        this.normalizedRegionCounts = _.map(this.newgraphdata, "Normalized")
+      if (this.normBrains.includes(this.id)){
+        //this.normalizedCategory = _.map(this.normalizedoutput, "NormalizedTotal");
+        this.normalizedRegionCounts = _.filter(_.map(this.newgraphdata, "Normalized"), (item)=> item>=0);
+        this.normalizedCategory = _.filter(_.map(this.catnormdata, "TotalCount"), (item)=> item>=0);
       }
     },
     showChart() {
       $("html, body").animate({ scrollTop: $(document).height() }, "slow");
       this.flag = true;
       if (this.category=='injured' || this.category=='cervical') {
-        this.showNormalized = true;
+        this.showNormalizedButton = true;
       }
       this.chartOptions2 = {
         chart: {
@@ -498,7 +529,7 @@ export default {
           opacity: 1,
         },
         title: {
-          text: "Cell count by category",
+          text: "Raw cell count by category",
           align: "center",
           offsetY: 10,
           style: {
@@ -511,7 +542,7 @@ export default {
         tickPlacement: 'on' },
         yaxis: {
           tickAmount: 5,
-          max: this.maxval,
+          max: this.slidervalue,
           labels: { maxWidth: 270, style: { fontSize: "16px" } },
         },
         legend: {
@@ -544,7 +575,7 @@ export default {
           opacity: 1,
         },
         title: {
-          text: "Cell count by brain region",
+          text: "Raw cell count by brain region",
           align: "centre",
           style: {
             fontSize: "14px",
@@ -555,7 +586,7 @@ export default {
         xaxis: { categories: this.categories },
         yaxis: {
           tickAmount: 5,
-          max: 12000,
+          max: this.slidervalue,
           labels: { maxWidth: 350, offsetX: -10 },
         },
         legend: {
@@ -618,21 +649,21 @@ export default {
         return false
       }
     },
+    //show left-right value
     showLeftRight(){
-      console.log("showleftright")
     },
     getCategoryData(){
-      console.log(this.categoryLeftRight)
       if (this.category=="injured"){
-        console.log("I was called?")
-        return this.categoryLeftRight;
+        //return this.categoryLeftRight;
+        return this.categoryTotal;
       }
       else {
         return this.categoryTotal;
       }
     },
     plotNormalized(){
-      //this.showNormalized = false;
+      this.showNormalized= true;
+      this.showNormalizedButton= false;
       $("html, body").animate({ scrollTop: $(document).height() }, "slow");
       this.normchartOptions = {
           chart: {
@@ -676,7 +707,7 @@ export default {
         };
         this.normSeries = [
           {
-            name: "normCategoryTotal",
+            name: "normCategoryCount",
             data: this.normalizedCategory,
           },
         ]
@@ -731,9 +762,6 @@ export default {
   created() {
     this.fetchData();
   },
-  beforeMount() {
-    //this.fetchData();
-  },
   watch: {
     slidervalue: function () {
       //left graph update
@@ -741,7 +769,6 @@ export default {
         this.sumoutput,
         (obj1) => obj1["Total"] <= this.slidervalue
       );
-      console.log(this.newsumoutput);
       this.newcategorytotal = _.map(this.newsumoutput, "Total");
       this.mainregions = _.map(this.newsumoutput, "Category-Name");
       this.colors = _.map(this.newsumoutput, "Color");
@@ -757,7 +784,7 @@ export default {
           categories: this.mainregions,
         },
         yaxis: {
-          max: _.max(this.categorytotal),
+          max: _.max(this.newcategorytotal),
         },
         colors: this.colors,
       };

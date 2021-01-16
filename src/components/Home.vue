@@ -1,21 +1,5 @@
 <template>
   <div>
-    <!-- <b-container >
-
-        <b-card  body-class="text-center" header-tag="nav"
-        title="Exploring Nuclei of Descending Input to the Spinal Cord" class="card"
-        style="max-width: 80rem;">
-        <b-card-img src="./176whole.png" height="600"></b-card-img>
-          <b-card-text>
-           This project visualizes and quantifies supra spinal neurons with projections to the 
-           cervical, thoracic and lumbar segments.  
-          </b-card-text>
-
-          <b-button variant="primary" :to="{name: 'selecttype'}">
-            <b>Start Exploring</b>
-            </b-button>
-        </b-card>
-    </b-container> -->
   <b-container>
     <b-row class="container">
       <b-col>
@@ -27,6 +11,7 @@
           style="text-shadow: 0px 0px 2px #000"
           fade
           indicators
+          controls
           img-width="800"
           img-height="380"
         >
@@ -39,6 +24,10 @@
     </b-row>
     <br>
       <b-row>
+          <h5>
+          This project visualizes and quantifies supra spinal neurons with projections to the 
+                    cervical, thoracic and lumbar segments.            
+          </h5>
           <b-button class="butt" variant="primary" :to="{name: 'selecttype'}">
             <b>Start Exploring</b>
           </b-button>
@@ -93,6 +82,12 @@ export default {
 <style scoped>
 h3 {
   text-align: center;
+}
+h5 {
+  margin-left: 38px;
+  margin-top: -15px;
+  text-align: center;
+  font-size: 19px;
 }
 .butt {
   margin: 0 auto;
